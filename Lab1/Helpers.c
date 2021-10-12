@@ -4,7 +4,7 @@
 void Jump(long int imm)
 {
 	RegisterArray[BRANCH_REGISTER_STORE_VALUE] = ProgramCounter;
-	ProgramCounter = imm && MEMORY_SIZE - 1;
+	ProgramCounter = imm && MAX_MEMORY_SIZE - 1;
 	/*pc=imm[15:0]-1 becuase we later increment it so we subtract 1
 	to jump to the right value of pc at the end of the execution of the comand*/
 }
@@ -78,4 +78,29 @@ void Rsf(int dst, int src0, int src1, long int imm)
 {
 	RegisterArray[dst] = RegisterArray[src0] >> RegisterArray[src1];
 }
+
+void Hlt(int dst, int src0, int src1, long int imm)
+{
+
+}
+
+OpcodeMapping[NUMBER_OF_OPCODES] =
+{
+	{ADD, "ADD", "", Add},
+	{SUB, "SUB", "", Sub},
+	{LSF, "LSF", "", Lsf},
+	{RSF, "RSF", "", Rsf},
+	{AND, "AND", "", And},
+	{OR, "OR", "", Or},
+	{XOR, "XOR", "", Xor},
+	{LHI, "LHI", "", Lhi},
+	{LD, "LD", "", Ld},
+	{ST, "ST", "", St},
+	{JLT, "JLT", "", Jlt},
+	{JLE, "JLE", "", Jle},
+	{JEQ, "JEQ", "", Jeq},
+	{JNE, "JNE", "", Jne},
+	{JIN, "JIN", "", Jin},
+	{HLT, "ADD", "", Hlt},
+};
 
