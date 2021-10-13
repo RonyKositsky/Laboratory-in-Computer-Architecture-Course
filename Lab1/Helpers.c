@@ -81,26 +81,41 @@ void Rsf(int dst, int src0, int src1, long int imm)
 
 void Hlt(int dst, int src0, int src1, long int imm)
 {
-
+	ProgramIsRunning = 0;
 }
 
 OpcodeMapping[NUMBER_OF_OPCODES] =
 {
-	{ADD, "ADD", "", Add},
-	{SUB, "SUB", "", Sub},
-	{LSF, "LSF", "", Lsf},
-	{RSF, "RSF", "", Rsf},
-	{AND, "AND", "", And},
-	{OR, "OR", "", Or},
-	{XOR, "XOR", "", Xor},
-	{LHI, "LHI", "", Lhi},
-	{LD, "LD", "", Ld},
-	{ST, "ST", "", St},
-	{JLT, "JLT", "", Jlt},
-	{JLE, "JLE", "", Jle},
-	{JEQ, "JEQ", "", Jeq},
-	{JNE, "JNE", "", Jne},
-	{JIN, "JIN", "", Jin},
-	{HLT, "ADD", "", Hlt},
+	{ADD, "ADD", Add},
+	{SUB, "SUB", Sub},
+	{LSF, "LSF", Lsf},
+	{RSF, "RSF", Rsf},
+	{AND, "AND", And},
+	{OR, "OR", Or},
+	{XOR, "XOR", Xor},
+	{LHI, "LHI", Lhi},
+	{LD, "LD", Ld},
+	{ST, "ST", St},
+	{JLT, "JLT", Jlt},
+	{JLE, "JLE", Jle},
+	{JEQ, "JEQ", Jeq},
+	{JNE, "JNE", Jne},
+	{JIN, "JIN", Jin},
+	{HLT, "ADD", Hlt},
 };
+
+XOpcode GetOpcode(int opcode)
+{
+	XOpcode op = NULL;
+	for(int i = 0; i < NUMBER_OF_OPCODES; i++)
+	{
+		if (OpcodeMapping[i].code == opcode)
+		{
+			op = OpcodeMapping[i];
+			break;
+		}
+	}
+
+	return op;
+}
 

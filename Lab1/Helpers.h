@@ -9,6 +9,8 @@
 static int RegisterArray[NUMBER_OF_REGISTERS] = { 0 };
 static long int Meomry[MAX_MEMORY_SIZE] = { 0 };
 static int ProgramCounter = 0;
+static int InstructionCounter = 0;
+static int ProgramIsRunning = 1;
 
 typedef enum
 {
@@ -33,11 +35,11 @@ typedef enum
 typedef struct
 {
 	int code;
-	char* operation;
-	char* printFuntion;
+	char* operationString;
 	void (*OperationFunction)(int dst, int src0, int src1, long int imm);
 }XOpcode;
 
 XOpcode OpcodeMapping[NUMBER_OF_OPCODES];
+XOpcode GetOpcode(int opcode);
 
 #endif
