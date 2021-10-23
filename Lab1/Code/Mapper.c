@@ -21,6 +21,8 @@ ALL RIGHTS RESERVED
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /************************************
 *      definitions                 *
@@ -60,9 +62,11 @@ static bool gProgramIsRunning = true;
 /*19*/  static void Jne(uint16_t dst, uint16_t src0, uint16_t src1);
 /*20*/  static void Jin(uint16_t dst, uint16_t src0, uint16_t src1);
 /*24*/  static void Hlt(uint16_t dst, uint16_t src0, uint16_t src1);
+//
+//
+static void check_for_memory_error(uint32_t address);
+static void register_validation(uint16_t dst, uint16_t src0, uint16_t src1);
 
-//
-//
 static void Jump(uint16_t pc_location);
 //
 //
@@ -106,8 +110,10 @@ opcode_s Mapper_GetOpcode(uint16_t opcode)
 		if (OpcodeMapping[i].code == opcode)
 			return OpcodeMapping[i];
 	}
-
-	return *((opcode_s *) 0);
+    //
+    // We get an invalid opcode, so we will exit
+    printf("Wrong opcode was passed (%u), exit the program", opcode);
+    exit(1);
 }
 
 bool Mapper_IsProgramRunning(void)
@@ -152,6 +158,7 @@ void Mapper_GetRegistersSnapshot(uint32_t regs[NUMBER_OF_REGISTERS])
 // function implementation
 static void Add(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (dst <= IMMEDIATE_REGISTER)
         return;
 
@@ -160,6 +167,7 @@ static void Add(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Sub(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (dst <= IMMEDIATE_REGISTER)
         return;
 
@@ -168,6 +176,7 @@ static void Sub(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Lsf(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (dst <= IMMEDIATE_REGISTER)
         return;
 
@@ -176,6 +185,7 @@ static void Lsf(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Rsf(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (dst <= IMMEDIATE_REGISTER)
         return;
 
@@ -184,6 +194,7 @@ static void Rsf(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void And(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (dst <= IMMEDIATE_REGISTER)
         return;
 
@@ -192,6 +203,7 @@ static void And(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Or(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (dst <= IMMEDIATE_REGISTER)
         return;
 
@@ -200,6 +212,7 @@ static void Or(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Xor(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (dst <= IMMEDIATE_REGISTER)
         return;
     
@@ -208,6 +221,7 @@ static void Xor(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Lhi(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (dst <= IMMEDIATE_REGISTER)
         return;
     
@@ -217,43 +231,51 @@ static void Lhi(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Ld(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (dst <= IMMEDIATE_REGISTER)
         return;
+    check_for_memory_error(gRegisterArray[src1]);
 
     gRegisterArray[dst] = gMemory[gRegisterArray[src1]];
 }
 
 static void St(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
 	gMemory[gRegisterArray[src1]] = gRegisterArray[src0];
 }
 
 static void Jlt(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (gRegisterArray[src0] < gRegisterArray[src1])
 		Jump(gRegisterArray[IMMEDIATE_REGISTER]);
 }
 
 static void Jle(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     if (gRegisterArray[src0] <= gRegisterArray[src1])
 		Jump(gRegisterArray[IMMEDIATE_REGISTER]);
 }
 
 static void Jeq(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
 	if (gRegisterArray[src0] == gRegisterArray[src1])
 		Jump(gRegisterArray[IMMEDIATE_REGISTER]);
 }
 
 static void Jne(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
 	if (gRegisterArray[src0] != gRegisterArray[src1])
 		Jump(gRegisterArray[IMMEDIATE_REGISTER]);    
 }
 
 static void Jin(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    register_validation(dst, src0, src1);
     Jump(gRegisterArray[src0]);    
 }
 
@@ -264,8 +286,35 @@ static void Hlt(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Jump(uint16_t pc_location)
 {
-    gRegisterArray[BRANCH_REGISTER_STORE_VALUE] = gProgramCounter - 1;
+    gRegisterArray[BRANCH_REGISTER_STORE_VALUE] = gProgramCounter - 1; // taking -1 because we increment the counter before executing the function
 	gProgramCounter = pc_location;
-	/*pc=imm[15:0]-1 becuase we later increment it so we subtract 1
-	to jump to the right value of pc at the end of the execution of the comand*/
 }
+
+static void check_for_memory_error(uint32_t address)
+{
+    if (address >= MAX_MEMORY_SIZE)
+    {
+        printf("the memory address (%u) is not valid", address);
+        exit(1);
+    }
+}
+
+static void register_validation(uint16_t dst, uint16_t src0, uint16_t src1)
+{
+    if (dst < 0 || dst > NUMBER_OF_REGISTERS)
+    {
+        printf("the dst register (%u) is not valid, valid range is [0, %d]", dst, NUMBER_OF_REGISTERS);
+        exit(1);
+    }
+    if (src0 < 0 || src0 > NUMBER_OF_REGISTERS)
+    {
+        printf("the src0 register (%u) is not valid, valid range is [0, %d]", src0, NUMBER_OF_REGISTERS);
+        exit(1);
+    }
+    if (src1 < 0 || src1 > NUMBER_OF_REGISTERS)
+    {
+        printf("the src1 register (%u) is not valid, valid range is [0, %d]", src1, NUMBER_OF_REGISTERS);
+        exit(1);
+    }
+}
+
