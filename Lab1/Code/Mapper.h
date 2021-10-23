@@ -137,6 +137,30 @@ uint32_t Mapper_GetNextInstruction(uint16_t *pc);
 /*!
 ******************************************************************************
 \brief
+ Get the current position of Program Counter
+
+\details
+ get PC location.
+
+\return instruction command
+*****************************************************************************/
+uint16_t Mapper_GetProgramCounter(void);
+
+/*!
+******************************************************************************
+\brief
+Set immediate values register.
+
+\param
+ [in] imm_value - immediate value
+
+\return none
+*****************************************************************************/
+void Mapper_SetImmediateRegister(uint16_t imm_value);
+
+/*!
+******************************************************************************
+\brief
  Get registers snapshot
 
 \details

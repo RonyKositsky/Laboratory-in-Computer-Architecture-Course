@@ -25,8 +25,9 @@ ALL RIGHTS RESERVED
 /************************************
 *      definitions                 *
 ************************************/
+#define _CRT_SECURE_NO_WARNINGS
 #define BRANCH_REGISTER_STORE_VALUE 7
-#define IMMEDIATE_REGISTER          2
+#define IMMEDIATE_REGISTER          1
 
 /************************************
 *       types                       *
@@ -83,7 +84,7 @@ static opcode_s OpcodeMapping[NUMBER_OF_OPCODES] =
 	{JEQ, 	"JEQ", 	Jeq},
 	{JNE, 	"JNE", 	Jne},
 	{JIN, 	"JIN", 	Jin},
-	{HLT, 	"ADD", 	Hlt},
+	{HLT, 	"HLT", 	Hlt},
 };
 
 /************************************
@@ -106,7 +107,7 @@ opcode_s Mapper_GetOpcode(uint16_t opcode)
 			return OpcodeMapping[i];
 	}
 
-	return NULL;
+	return *((opcode_s *) 0);
 }
 
 bool Mapper_IsProgramRunning(void)
@@ -128,9 +129,19 @@ uint32_t Mapper_GetNextInstruction(uint16_t *pc)
     return mem; // gMemory[gProgramCounter++] ??
 }
 
+uint16_t Mapper_GetProgramCounter(void)
+{
+    return gProgramCounter;
+}
+
+void Mapper_SetImmediateRegister(uint16_t imm_value)
+{
+    gRegisterArray[IMMEDIATE_REGISTER] = imm_value;
+}
+
 void Mapper_GetRegistersSnapshot(uint32_t regs[NUMBER_OF_REGISTERS])
 {
-    memcpy((uint8_t *)regs, (uint8_t *)&gRegisterArray, sizeof(gRegisterArray));
+    memcpy((uint8_t *)regs, (uint8_t *)gRegisterArray, sizeof(gRegisterArray));
 }
 
 
@@ -141,53 +152,80 @@ void Mapper_GetRegistersSnapshot(uint32_t regs[NUMBER_OF_REGISTERS])
 // function implementation
 static void Add(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    if (dst <= IMMEDIATE_REGISTER)
+        return;
+
 	gRegisterArray[dst] = gRegisterArray[src0] + gRegisterArray[src1];
 }
 
 static void Sub(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    if (dst <= IMMEDIATE_REGISTER)
+        return;
+
 	gRegisterArray[dst] = gRegisterArray[src0] - gRegisterArray[src1];
 }
 
 static void Lsf(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    if (dst <= IMMEDIATE_REGISTER)
+        return;
+
 	gRegisterArray[dst] = gRegisterArray[src0] << gRegisterArray[src1];
 }
 
 static void Rsf(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    if (dst <= IMMEDIATE_REGISTER)
+        return;
+
 	gRegisterArray[dst] = gRegisterArray[src0] >> gRegisterArray[src1];
 }
 
 static void And(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    if (dst <= IMMEDIATE_REGISTER)
+        return;
+
 	gRegisterArray[dst] = gRegisterArray[src0] & gRegisterArray[src1];
 }
 
 static void Or(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    if (dst <= IMMEDIATE_REGISTER)
+        return;
+
     gRegisterArray[dst] = gRegisterArray[src0] | gRegisterArray[src1];
 }
 
 static void Xor(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-	gRegisterArray[dst] = gRegisterArray[src0] ^ gRegisterArray[src1];
+    if (dst <= IMMEDIATE_REGISTER)
+        return;
+    
+   gRegisterArray[dst] = gRegisterArray[src0] ^ gRegisterArray[src1];
 }
 
 static void Lhi(uint16_t dst, uint16_t src0, uint16_t src1)
 {
+    if (dst <= IMMEDIATE_REGISTER)
+        return;
+    
     gRegisterArray[dst] &= 0x0000FFFF;                                   // clean 16bit MSB
     gRegisterArray[dst] |= (gRegisterArray[IMMEDIATE_REGISTER] << 16);    // store immediate value at the 16bit MSB
 }
 
 static void Ld(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-	gRegisterArray[dst] = gMemory[src0];
+    if (dst <= IMMEDIATE_REGISTER)
+        return;
+
+    gRegisterArray[dst] = gMemory[gRegisterArray[src1]];
 }
 
 static void St(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-	gMemory[src1] = gRegisterArray[src0];
+	gMemory[gRegisterArray[src1]] = gRegisterArray[src0];
 }
 
 static void Jlt(uint16_t dst, uint16_t src0, uint16_t src1)
@@ -226,8 +264,8 @@ static void Hlt(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Jump(uint16_t pc_location)
 {
-    gRegisterArray[BRANCH_REGISTER_STORE_VALUE] = gProgramCounter;
-	gProgramCounter = pc_location - 1;
+    gRegisterArray[BRANCH_REGISTER_STORE_VALUE] = gProgramCounter - 1;
+	gProgramCounter = pc_location;
 	/*pc=imm[15:0]-1 becuase we later increment it so we subtract 1
 	to jump to the right value of pc at the end of the execution of the comand*/
 }

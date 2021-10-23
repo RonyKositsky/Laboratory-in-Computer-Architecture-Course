@@ -23,6 +23,7 @@ ALL RIGHTS RESERVED
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
 /************************************
 *      definitions                 *
@@ -38,11 +39,11 @@ typedef union
 	struct
 	{
 		uint16_t immediate		: 16;	// [0:15]  Immediate value
-		uint8_t  source_1		: 3;	// [16:18] src1 value
-		uint8_t  source_0		: 3;	// [19:21] src0 value
-		uint8_t  destination	: 3;	// [22:24] src0 value
-		uint8_t  opcode			: 5;	// [25:29] opcode value
-		uint8_t  not_in_use		: 2;	// not relevant
+		uint16_t source_1		: 3;	// [16:18] src1 value
+		uint16_t source_0		: 3;	// [19:21] src0 value
+		uint16_t destination	: 3;	// [22:24] src0 value
+		uint16_t opcode			: 5;	// [25:29] opcode value
+		uint16_t not_in_use		: 2;	// not relevant
 	} bits;
 	
 	uint32_t command;
@@ -72,8 +73,6 @@ static struct
 } gInstructionData;
 
 
-
-
 /************************************
 *      static functions             *
 ************************************/
@@ -84,8 +83,7 @@ static void CloseFiles(void);
 //
 static void PrintRawData(uint32_t regs[NUMBER_OF_REGISTERS]);
 static void PrintExecLine(uint32_t regs[NUMBER_OF_REGISTERS]);
-static void PrintTrace(void);
-
+static void MemoryDump(void);
 
 /************************************
 *       API implementation          *
@@ -109,23 +107,33 @@ int main(int argc, char* argv[])
 	{
 		// get command from memory & parse the command
 		gInstructionData.instruction_code.command = Mapper_GetNextInstruction(&gInstructionData.program_counter);
+        // set immediate register
+        Mapper_SetImmediateRegister(gInstructionData.instruction_code.bits.immediate);
 
 		// Get opcode function
 		gInstructionData.opcode = Mapper_GetOpcode(gInstructionData.instruction_code.bits.opcode);
 
 		// Print trace
-		PrintTrace();
+        uint32_t regs[NUMBER_OF_REGISTERS];
+        Mapper_GetRegistersSnapshot(regs);
+        PrintRawData(regs);
 
 		// execute operation
 		gInstructionData.opcode.OperationFunction(gInstructionData.instruction_code.bits.destination,
 													gInstructionData.instruction_code.bits.source_0,
 													gInstructionData.instruction_code.bits.source_1);
+        
+        PrintExecLine(regs);
 
 		// Increase counters
 		gInstructionData.instruction_counter++;
 	}
 
+    fprintf(gTraceFile, "sim finished at pc %u, %u instructions", gInstructionData.program_counter, gInstructionData.instruction_counter);
+    MemoryDump();
 	CloseFiles();
+
+    return 0;
 }
 
 /************************************
@@ -151,15 +159,6 @@ static void CloseFiles(void)
 	fclose(gMemoryInFile);
 	fclose(gMemoryOutFile);
 	fclose(gTraceFile);
-}
-
-static void PrintTrace(void)
-{
-	uint32_t regs[NUMBER_OF_REGISTERS];
-	Mapper_GetRegistersSnapshot(regs);
-
-	PrintRawData(regs);
-	PrintExecLine(regs);
 }
 
 static void PrintRawData(uint32_t regs[NUMBER_OF_REGISTERS])
@@ -199,7 +198,7 @@ static void PrintExecLine(uint32_t regs[NUMBER_OF_REGISTERS])
 			break;
 		case ST:
 			fprintf(gTraceFile, ">>>> EXEC: MEM[%ld] = R[%d] = %08lx <<<<\n\n", 
-					Mapper_GetFromMemory(regs[ins_code->bits.source_1]), ins_code->bits.source_0, regs[ins_code->bits.source_0]);
+					regs[ins_code->bits.source_1], ins_code->bits.source_0, regs[ins_code->bits.source_0]);
 			break;
 		case HLT:
 			fprintf(gTraceFile, ">>>> EXEC: HALT at PC %04lx<<<<\n", gInstructionData.program_counter);
@@ -210,7 +209,14 @@ static void PrintExecLine(uint32_t regs[NUMBER_OF_REGISTERS])
 		case JLT: 
 		case JIN:
 			fprintf(gTraceFile, ">>>> EXEC: %s %ld, %ld, %ld <<<<\n\n", 
-					gInstructionData.opcode.operationString, regs[ins_code->bits.source_0], regs[ins_code->bits.source_1], gInstructionData.program_counter + 1);
+					gInstructionData.opcode.operationString, regs[ins_code->bits.source_0], regs[ins_code->bits.source_1], Mapper_GetProgramCounter());
 			break;
 	}		
 }
+
+static void MemoryDump(void)
+{
+    for (int i = 0; i < MAX_MEMORY_SIZE; i++)
+        fprintf(gMemoryOutFile, "%08lx\n", Mapper_GetFromMemory(i));
+}
+
