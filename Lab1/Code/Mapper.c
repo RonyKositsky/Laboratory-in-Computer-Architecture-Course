@@ -30,6 +30,8 @@ ALL RIGHTS RESERVED
 #define _CRT_SECURE_NO_WARNINGS
 #define BRANCH_REGISTER_STORE_VALUE 7
 #define IMMEDIATE_REGISTER          1
+//
+#define HALT_INSTRUCTION_COMMAND    (0x30000000)
 
 /************************************
 *       types                       *
@@ -42,6 +44,8 @@ static uint32_t gRegisterArray[NUMBER_OF_REGISTERS] = { 0 };
 static uint32_t gMemory[MAX_MEMORY_SIZE] = { 0 };
 static uint16_t gProgramCounter = 0;
 static bool gProgramIsRunning = true;
+//
+static bool gInvalidOperation = false;
 
 /************************************
 *      static functions             *
@@ -64,8 +68,8 @@ static bool gProgramIsRunning = true;
 /*24*/  static void Hlt(uint16_t dst, uint16_t src0, uint16_t src1);
 //
 //
-static void check_for_memory_error(uint32_t address);
-static void register_validation(uint16_t dst, uint16_t src0, uint16_t src1);
+static bool check_for_memory_error(uint32_t address);
+static bool register_violation(uint16_t dst, uint16_t src0, uint16_t src1);
 
 static void Jump(uint16_t pc_location);
 //
@@ -113,7 +117,7 @@ opcode_s Mapper_GetOpcode(uint16_t opcode)
     //
     // We get an invalid opcode, so we will exit
     printf("Wrong opcode was passed (%u), exit the program", opcode);
-    exit(1);
+    return OpcodeMapping[NUMBER_OF_OPCODES - 1];    // return halt command
 }
 
 bool Mapper_IsProgramRunning(void)
@@ -128,11 +132,14 @@ uint32_t Mapper_GetFromMemory(uint16_t location)
 
 uint32_t Mapper_GetNextInstruction(uint16_t *pc)
 {
+    if (gInvalidOperation == true)
+        return HALT_INSTRUCTION_COMMAND;
+
     *pc = gProgramCounter;
     //
     uint32_t mem = gMemory[gProgramCounter];
     gProgramCounter++;
-    return mem; // gMemory[gProgramCounter++] ??
+    return mem;
 }
 
 uint16_t Mapper_GetProgramCounter(void)
@@ -150,16 +157,12 @@ void Mapper_GetRegistersSnapshot(uint32_t regs[NUMBER_OF_REGISTERS])
     memcpy((uint8_t *)regs, (uint8_t *)gRegisterArray, sizeof(gRegisterArray));
 }
 
-
 /************************************
 * static implementation             *
 ************************************/
-
-// function implementation
 static void Add(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
-    if (dst <= IMMEDIATE_REGISTER)
+    if (dst <= IMMEDIATE_REGISTER || register_violation(dst, src0, src1) == true)
         return;
 
 	gRegisterArray[dst] = gRegisterArray[src0] + gRegisterArray[src1];
@@ -167,8 +170,7 @@ static void Add(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Sub(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
-    if (dst <= IMMEDIATE_REGISTER)
+    if (dst <= IMMEDIATE_REGISTER || register_violation(dst, src0, src1) == true)
         return;
 
 	gRegisterArray[dst] = gRegisterArray[src0] - gRegisterArray[src1];
@@ -176,8 +178,7 @@ static void Sub(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Lsf(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
-    if (dst <= IMMEDIATE_REGISTER)
+    if (dst <= IMMEDIATE_REGISTER || register_violation(dst, src0, src1) == true)
         return;
 
 	gRegisterArray[dst] = gRegisterArray[src0] << gRegisterArray[src1];
@@ -185,8 +186,7 @@ static void Lsf(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Rsf(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
-    if (dst <= IMMEDIATE_REGISTER)
+    if (dst <= IMMEDIATE_REGISTER || register_violation(dst, src0, src1) == true)
         return;
 
 	gRegisterArray[dst] = gRegisterArray[src0] >> gRegisterArray[src1];
@@ -194,8 +194,7 @@ static void Rsf(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void And(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
-    if (dst <= IMMEDIATE_REGISTER)
+    if (dst <= IMMEDIATE_REGISTER || register_violation(dst, src0, src1) == true)
         return;
 
 	gRegisterArray[dst] = gRegisterArray[src0] & gRegisterArray[src1];
@@ -203,8 +202,7 @@ static void And(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Or(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
-    if (dst <= IMMEDIATE_REGISTER)
+    if (dst <= IMMEDIATE_REGISTER || register_violation(dst, src0, src1) == true)
         return;
 
     gRegisterArray[dst] = gRegisterArray[src0] | gRegisterArray[src1];
@@ -212,8 +210,7 @@ static void Or(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Xor(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
-    if (dst <= IMMEDIATE_REGISTER)
+    if (dst <= IMMEDIATE_REGISTER || register_violation(dst, src0, src1) == true)
         return;
     
    gRegisterArray[dst] = gRegisterArray[src0] ^ gRegisterArray[src1];
@@ -221,61 +218,70 @@ static void Xor(uint16_t dst, uint16_t src0, uint16_t src1)
 
 static void Lhi(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
-    if (dst <= IMMEDIATE_REGISTER)
+    if (dst <= IMMEDIATE_REGISTER || register_violation(dst, src0, src1) == true)
         return;
     
-    gRegisterArray[dst] &= 0x0000FFFF;                                   // clean 16bit MSB
+    gRegisterArray[dst] &= 0x0000FFFF;                                    // clean 16bit MSB
     gRegisterArray[dst] |= (gRegisterArray[IMMEDIATE_REGISTER] << 16);    // store immediate value at the 16bit MSB
 }
 
 static void Ld(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
-    if (dst <= IMMEDIATE_REGISTER)
+    if (dst <= IMMEDIATE_REGISTER || check_for_memory_error(gRegisterArray[src1]) == true || register_violation(dst, src0, src1) == true)
         return;
-    check_for_memory_error(gRegisterArray[src1]);
 
     gRegisterArray[dst] = gMemory[gRegisterArray[src1]];
 }
 
 static void St(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
+    if (check_for_memory_error(gRegisterArray[src1]) == true || register_violation(dst, src0, src1) == true)
+        return;
+
 	gMemory[gRegisterArray[src1]] = gRegisterArray[src0];
 }
 
 static void Jlt(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
+    if (register_violation(dst, src0, src1) == true)
+        return;
+
     if (gRegisterArray[src0] < gRegisterArray[src1])
 		Jump(gRegisterArray[IMMEDIATE_REGISTER]);
 }
 
 static void Jle(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
+    if (register_violation(dst, src0, src1) == true)
+        return;
+        
     if (gRegisterArray[src0] <= gRegisterArray[src1])
 		Jump(gRegisterArray[IMMEDIATE_REGISTER]);
 }
 
 static void Jeq(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
+    if (register_violation(dst, src0, src1) == true)
+        return;
+        
 	if (gRegisterArray[src0] == gRegisterArray[src1])
 		Jump(gRegisterArray[IMMEDIATE_REGISTER]);
 }
 
 static void Jne(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
+    if (register_violation(dst, src0, src1) == true)
+        return;
+        
 	if (gRegisterArray[src0] != gRegisterArray[src1])
 		Jump(gRegisterArray[IMMEDIATE_REGISTER]);    
 }
 
 static void Jin(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    register_validation(dst, src0, src1);
+    if (register_violation(dst, src0, src1) == true)
+        return;
+        
     Jump(gRegisterArray[src0]);    
 }
 
@@ -290,31 +296,29 @@ static void Jump(uint16_t pc_location)
 	gProgramCounter = pc_location;
 }
 
-static void check_for_memory_error(uint32_t address)
+static bool check_for_memory_error(uint32_t address)
 {
     if (address >= MAX_MEMORY_SIZE)
     {
         printf("the memory address (%u) is not valid", address);
-        exit(1);
+        gInvalidOperation = true;
+        return true;
     }
+
+    return false;
 }
 
-static void register_validation(uint16_t dst, uint16_t src0, uint16_t src1)
+static bool register_violation(uint16_t dst, uint16_t src0, uint16_t src1)
 {
-    if (dst < 0 || dst > NUMBER_OF_REGISTERS)
+    if (dst < 0 || dst > NUMBER_OF_REGISTERS ||
+        src0 < 0 || src0 > NUMBER_OF_REGISTERS ||
+        src1 < 0 || src1 > NUMBER_OF_REGISTERS)
     {
-        printf("the dst register (%u) is not valid, valid range is [0, %d]", dst, NUMBER_OF_REGISTERS);
-        exit(1);
+        printf("one of the registers (dst-%u, src0-%u, src1-%u) is not valid, valid range is [0, %d]", dst, src0, src1, NUMBER_OF_REGISTERS);
+        gInvalidOperation = true;
+        return true;
     }
-    if (src0 < 0 || src0 > NUMBER_OF_REGISTERS)
-    {
-        printf("the src0 register (%u) is not valid, valid range is [0, %d]", src0, NUMBER_OF_REGISTERS);
-        exit(1);
-    }
-    if (src1 < 0 || src1 > NUMBER_OF_REGISTERS)
-    {
-        printf("the src1 register (%u) is not valid, valid range is [0, %d]", src1, NUMBER_OF_REGISTERS);
-        exit(1);
-    }
+
+    return false;
 }
 
