@@ -5,9 +5,6 @@
     <ClCompile Include="llsim.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="llsim.c~" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="llsim.h" />
   </ItemGroup>
 </Project>
