@@ -393,7 +393,7 @@ static void sp_ctl(sp_t *sp)
 				{
 					fprintf(inst_trace_fp, ">>>> EXEC: CPY - Source: %i, Destination: %i, Length: %i <<<<\n\n",
 						spro->r[spro->src0], spro->r[spro->dst], spro->r[spro->src1]);
-					while (!sp->dma->state == DMA_WAIT) {}
+					while (!(sp->dma->state == DMA_WAIT)) {}
 					sp->dma->source = spro->r[spro->src0];
 					sp->dma->dest = spro->r[spro->dst];
 					sp->dma->length = spro->r[spro->src1];
@@ -406,7 +406,7 @@ static void sp_ctl(sp_t *sp)
 				}
 				case ASK:
 				{
-					fprintf(inst_trace_fp, ">>>> EXEC: POL: Remaining to copy: %i <<<<\n\n",
+					fprintf(inst_trace_fp, ">>>> EXEC: ASK: Remaining to copy: %i <<<<\n\n",
 						sp->dma->remaining_memory);
 					sprn->r[spro->dst] = sp->dma->remaining_memory;
 					sprn->pc = spro->pc + 1;
@@ -417,7 +417,7 @@ static void sp_ctl(sp_t *sp)
 			if (spro->opcode == HLT)
 			{
 				fprintf(inst_trace_fp, ">>>> EXEC: HALT at PC %04x<<<<\n", spro->pc);
-				fprintf(inst_trace_fp, "sim finished at pc %i, %i instructions\n", spro->pc,
+				fprintf(inst_trace_fp, "sim finished at pc %i, %i instructions", spro->pc,
 					(spro->cycle_counter) / 6);
 
 				sprn->ctl_state = CTL_STATE_IDLE;
@@ -473,7 +473,7 @@ static void sp_generate_sram_memory_image(sp_t *sp, char *program_name)
         }
 	sp->memory_image_size = addr;
 
-        fprintf(inst_trace_fp, "program %s loaded, %d lines\n", program_name, addr);
+        fprintf(inst_trace_fp, "program %s loaded, %d lines\n\n", program_name, addr);
 
 	for (i = 0; i < sp->memory_image_size; i++)
 		llsim_mem_inject(sp->sram, i, sp->memory_image[i], 31, 0);
@@ -730,13 +730,13 @@ void* copy_dma(void* args)
 	sp->dma->remaining_memory = sp->dma->length;
 
 	for (i = 0; i < sp->dma->length; i++) {
-		sp->sram->data[sp->dma->dest + i] =
-			sp->sram->data[sp->dma->source + i];
+		sp->sram->data[sp->dma->dest + i] =	sp->sram->data[sp->dma->source + i];
 		sp->dma->remaining_memory -= 1;
 	}
 	if (sp->dma->remaining_memory == 0) {
 		sp->dma->state = DMA_WAIT;
 	}
+    
 	return (void*)0;
 }
 
