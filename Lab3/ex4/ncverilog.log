@@ -1,0 +1,29 @@
+ncverilog(64): 15.20-s085: (c) Copyright 1995-2020 Cadence Design Systems, Inc.
+TOOL:	ncverilog	15.20-s085: Started on Nov 20, 2021 at 11:53:44 IST
+ncverilog
+	+access+rw
+	add4.v
+file: add4.v
+	module worklib.fulladder:v
+		errors: 0, warnings: 0
+	module worklib.add4:v
+		errors: 0, warnings: 0
+	Total errors/warnings found outside modules and primitives:
+		errors: 0, warnings: 0
+		Caching library 'worklib' ....... Done
+	Elaborating the design hierarchy:
+	Building instance overlay tables: .................... Done
+	Building instance specific data structures.
+	Loading native compiled code:     .................... Done
+	Design hierarchy summary:
+		        Instances  Unique
+		Modules:        5       2
+		Primitives:    20       3
+		Scalar wires:   9       -
+	Writing initial simulation snapshot: worklib.add4:v
+Loading snapshot worklib.add4:v .................... Done
+ncsim> source /tools/cadence/INCISIVE/15.20.085/tools/inca/files/ncsimrc
+ncsim> run
+ncsim: *W,RNQUIE: Simulation is complete.
+ncsim> exit
+TOOL:	ncverilog	15.20-s085: Exiting on Nov 20, 2021 at 11:53:45 IST  (total: 00:00:01)

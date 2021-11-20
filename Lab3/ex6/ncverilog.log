@@ -1,0 +1,66 @@
+ncverilog(64): 15.20-s085: (c) Copyright 1995-2020 Cadence Design Systems, Inc.
+TOOL:	ncverilog	15.20-s085: Started on Nov 20, 2021 at 12:31:20 IST
+ncverilog
+	+access+rw
+	parity_tb.v
+	parity.v
+file: parity_tb.v
+	module worklib.main:v
+		errors: 0, warnings: 0
+	Total errors/warnings found outside modules and primitives:
+		errors: 0, warnings: 0
+		Caching library 'worklib' ....... Done
+	Elaborating the design hierarchy:
+	Building instance overlay tables: .................... Done
+	Generating native compiled code:
+		worklib.main:v <0x1f09d610>
+			streams:   6, words:  4789
+	Building instance specific data structures.
+	Loading native compiled code:     .................... Done
+	Design hierarchy summary:
+		             Instances  Unique
+		Modules:             2       2
+		Registers:           5       5
+		Scalar wires:        4       -
+		Always blocks:       4       4
+		Initial blocks:      1       1
+		Pseudo assignments:  3       3
+	Writing initial simulation snapshot: worklib.main:v
+Loading snapshot worklib.main:v .................... Done
+ncsim> source /tools/cadence/INCISIVE/15.20.085/tools/inca/files/ncsimrc
+ncsim> run
+time                   10: in 0, out 0
+time                   20: in 1, out 1
+time                   30: in 1, out 0
+time                   40: in 1, out 1
+time                   50: in 0, out 1
+time                   60: in 0, out 1
+time                   70: in 1, out 0
+time                   80: in 0, out 0
+time                   90: in 0, out 0
+time                  100: in 0, out 0
+time                  110: in 1, out 1
+time                  120: in 1, out 0
+time                  130: in 0, out 0
+time                  140: in 0, out 0
+time                  150: in 1, out 1
+time                  160: in 1, out 0
+time                  170: in 1, out 1
+time                  180: in 1, out 0
+time                  190: in 0, out 0
+time                  200: in 0, out 0
+time                  210: in 0, out 0
+time                  220: in 0, out 0
+time                  230: in 1, out 1
+time                  240: in 1, out 0
+time                  250: in 1, out 1
+time                  260: in 1, out 0
+time                  270: in 1, out 1
+time                  280: in 0, out 1
+time                  290: in 1, out 0
+time                  300: in 1, out 1
+time                  310: in 1, out 0
+Simulation complete via $finish(1) at time 311 NS + 0
+./parity_tb.v:30       $finish;
+ncsim> exit
+TOOL:	ncverilog	15.20-s085: Exiting on Nov 20, 2021 at 12:31:20 IST  (total: 00:00:00)

@@ -1,0 +1,48 @@
+ncverilog(64): 15.20-s085: (c) Copyright 1995-2020 Cadence Design Systems, Inc.
+TOOL:	ncverilog	15.20-s085: Started on Nov 20, 2021 at 11:51:37 IST
+ncverilog
+	+access+rw
+	fulladder_tb.v
+	fulladder.v
+file: fulladder_tb.v
+	module worklib.main:v
+		errors: 0, warnings: 0
+	Total errors/warnings found outside modules and primitives:
+		errors: 0, warnings: 0
+		Caching library 'worklib' ....... Done
+	Elaborating the design hierarchy:
+	Building instance overlay tables: .................... Done
+	Generating native compiled code:
+		worklib.main:v <0x64ef570a>
+			streams:   5, words:  7302
+	Building instance specific data structures.
+	Loading native compiled code:     .................... Done
+	Design hierarchy summary:
+		             Instances  Unique
+		Modules:             2       2
+		Primitives:          5       3
+		Registers:           3       3
+		Scalar wires:        3       -
+		Always blocks:       1       1
+		Initial blocks:      1       1
+		Pseudo assignments:  3       3
+	Writing initial simulation snapshot: worklib.main:v
+Loading snapshot worklib.main:v .................... Done
+ncsim> source /tools/cadence/INCISIVE/15.20.085/tools/inca/files/ncsimrc
+ncsim> run
+time=                   0: 0 + 0 (+0) = 0, carry = 0
+
+time=                   5: 0 + 0 (+1) = 1, carry = 0
+
+time=                  15: 0 + 1 (+1) = 0, carry = 1
+
+time=                  20: 1 + 0 (+0) = 1, carry = 0
+
+time=                  25: 1 + 0 (+1) = 0, carry = 1
+
+time=                  35: 1 + 1 (+1) = 1, carry = 1
+
+Simulation complete via $finish(1) at time 40 NS + 0
+./fulladder_tb.v:31 			$finish;
+ncsim> exit
+TOOL:	ncverilog	15.20-s085: Exiting on Nov 20, 2021 at 11:51:40 IST  (total: 00:00:03)

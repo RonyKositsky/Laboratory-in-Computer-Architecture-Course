@@ -5,7 +5,7 @@ module sat_count(clk, reset, branch, taken, prediction);
 	output prediction;
 
 	reg [3:0] counter;
-	reg [3:0] EXPN = {N{1`b1}};
+	reg [3:0] EXPN = (2 ** N) - 1;
 	wire [3:0] next_counter;
 
 	addsub add0(.result(next_counter), .operand_a(counter), .operand_b(4'b1), .mode(~taken));
@@ -16,7 +16,7 @@ module sat_count(clk, reset, branch, taken, prediction);
 				counter <= 0;
 			else 
 				begin
-					if (branch and next_counter >= 0 and next_counter <= EXPN)
+					if (branch && next_counter >= 0 && next_counter <= EXPN)
 						counter <= next_counter;
 				end
 		end

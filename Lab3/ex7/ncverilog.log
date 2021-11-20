@@ -1,0 +1,42 @@
+ncverilog(64): 15.20-s085: (c) Copyright 1995-2020 Cadence Design Systems, Inc.
+TOOL:	ncverilog	15.20-s085: Started on Nov 20, 2021 at 13:01:53 IST
+ncverilog
+	+access+rw
+	sat_count_tb.v
+	sat_count.v
+file: sat_count_tb.v
+	module worklib.sat_count_tb:v
+		errors: 0, warnings: 0
+	Total errors/warnings found outside modules and primitives:
+		errors: 0, warnings: 0
+		Caching library 'worklib' ....... Done
+	Elaborating the design hierarchy:
+	Building instance overlay tables: .................... Done
+	Generating native compiled code:
+		worklib.sat_count_tb:v <0x3f573ce3>
+			streams:   6, words:  6658
+	Building instance specific data structures.
+	Loading native compiled code:     .................... Done
+	Design hierarchy summary:
+		              Instances  Unique
+		Modules:              8       5
+		Primitives:          24       3
+		Registers:           10      10
+		Scalar wires:         6       -
+		Expanded wires:       8       2
+		Always blocks:        2       2
+		Initial blocks:       2       2
+		Cont. assignments:    1       1
+		Pseudo assignments:   7       7
+	Writing initial simulation snapshot: worklib.sat_count_tb:v
+Loading snapshot worklib.sat_count_tb:v .................... Done
+ncsim> source /tools/cadence/INCISIVE/15.20.085/tools/inca/files/ncsimrc
+ncsim> run
+preserved value test passed!
+up counting test passed!
+down counting test passed!
+PASSED ALL TESTS!
+Simulation complete via $finish(1) at time 120 NS + 0
+./sat_count_tb.v:59          $finish;
+ncsim> exit
+TOOL:	ncverilog	15.20-s085: Exiting on Nov 20, 2021 at 13:01:54 IST  (total: 00:00:01)

@@ -1,3 +1,4 @@
+`include "../ex4/add4.v"
 module	addsub( result, operand_a, operand_b, mode );
 
 	input	[3:0]	operand_a, operand_b;
@@ -11,11 +12,5 @@ module	addsub( result, operand_a, operand_b, mode );
 	xor	g2(xor_b[2], mode, operand_b[2]);
 	xor	g3(xor_b[3], mode, operand_b[3]);
 
-	add4	m1(
-		.sum(result),
-		.co(co),
-		.a(operand_a),
-		.b(xor_b),
-		.ci(mode)
-	);
+	add4	m1(.sum(result), .co(co), .a(operand_a), .b(xor_b),	.ci(mode));
 endmodule

@@ -1,11 +1,11 @@
 module main;
 	reg a,b,ci;
 	wire sum, co;
-	fulladder fulladder1(sum,co,a,b,ci);
+	fulladder fulladder1(sum, co, a, b, ci);
 
 	always@(sum or co)
 		begin
-			$display("time=%d:%b + %b = %b, carry = %b\n", $time, a, b, sum, co);
+			$display("time=%d: %b + %b (+%b) = %b, carry = %b\n", $time, a, b, ci, sum, co);
 		end
 	
 	initial

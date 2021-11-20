@@ -1,68 +1,109 @@
 module main;
    reg clk, reset, push, pop;
-   reg [2:0] in;
-   wire [2:0] out;
+   reg [1:0] in;
+   wire [1:0] out;
    wire full;
+   integer fail;
 
-   fifo uut #(4,2) (clk, reset, in, push, pop, out, full);
+   fifo #(4,2) uut (clk, reset, in, push, pop, out, full);
 
    always #5 clk = ~clk;
 
-   initial begin
-$dumpfile("waves.vcd");
-$dumpvars;
-clk = 1; fail = 0;
-#10
-reset = 1; in = 0; push = 0; pop = 0; //reset params
-#10 if (full != 0 || out != 0) fail <= 1;
+   initial 
+      begin
+         $dumpfile("waves.vcd");
+         $dumpvars;
+         clk = 0; fail = 0;
+         // reset test
+         reset = 1; in = 0; push = 0; pop = 0; 
+         #10
+         $display("full - %d, out - %d", full, out);
+         if (full == 0 && out == 0)
+            $display("reset passed!");
+         else fail = 1;
 
-#10 reset = 0; in = 2; push = 1; pop = 0; // #1 push
+         // push (n = 1)
+         reset = 0; in = 2; push = 1; pop = 0; 
+         #10
+         if (full == 0 && out == 0)
+            $display("push (n = 1) passed!");
+         else fail = fail | 2;
 
-#10 if (full != 0 || out != 0) fail <= 2;
+         // pop (n = 0)
+         reset = 0; in = 0; push = 0; pop = 1; 
+         #10
+         if (full == 0 && out == 2)
+            $display("pop (n = 0) passed!");
+         else fail = fail | 4;
 
-#10 reset = 0; in = 0; push = 0; pop = 1; // #1 pop
+         // push && pop (n = 1)
+         reset = 0; in = 3; push = 1; pop = 1;
+         #10
+         if (full == 0 && out == 0)
+            $display("push && pop (n = 1) passed!");
+         else fail = fail | 8;
 
-#10 if (full != 0 || out != 2) fail <= 3;
+         // push (n = 2)
+         reset = 0; in = 2; push = 1; pop = 0;
+         #10
+         if (full == 0 && out == 3)
+            $display("push (n = 2) passed!");
+         else fail = fail | 16;
 
-#10 reset = 0; in = 3; push = 1; pop = 1; // #1 push (nothing to pop)
+         // push (n = 3)
+         reset = 0; in = 1; push = 1; pop = 0; 
+         #10
+         if (full == 0 && out == 3)
+            $display("push (n = 3) passed!");
+         else fail = fail | 32;
 
-#10 if (full != 0 || out != 0) fail <= 4;
+         // push (n = 4)
+         reset = 0; in = 2; push = 1; pop = 0;
+         #10
+         if (full == 0 && out == 3)
+            $display("push (n = 4) passed!");
+         else fail = fail | 64;
 
-#10 reset = 0; in = 2; push = 1; pop = 0; // #2 push.
+         // push (n = 4) queue is full.
+         reset = 0; in = 3; push = 1; pop = 0;
+         #10
+         if (full == 1 && out == 3)
+            $display("push (n = 4) queue is full passed!");
+         else fail = fail | 128;
 
-#10 if (full != 0 || out != 3) fail <= 5;
+         // pop (n = 3)
+         reset = 0; in = 0; push = 0; pop = 1;
+         #10
+         if (full == 1 && out == 3)
+            $display("pop (n = 3) passed!");
+         else fail = fail | 256;
 
-#10 reset = 0; in = 1; push = 1; pop = 0; // #3 push.
+         // pop (n = 2)
+         reset = 0; in = 0; push = 0; pop = 1;
+         #10
+         if (full == 0 && out == 2)
+            $display("pop (n = 2) passed!");
+         else fail = fail | 512;
 
-#10 if (full != 0 || out != 3) fail <= 6;
+         // push && pop (n = 2)
+         reset = 0; in = 3; push = 1; pop = 1;
+         #10
+         if (full == 0 && out == 1)
+            $display("push && pop (n = 2) passed!");
+         else fail = fail | 1024;
 
-#10 reset = 0; in = 2; push = 1; pop = 0; // #4 push.
+         // reset queue
+         reset = 1; in = 0; push = 0; pop = 0; //reset params
+         #10
+         if (full == 0 && out == 0)
+            $display("reset queue passed!");
+         else fail = fail | 2048;
 
-#10 if (full == 0 || out != 3) fail <= 7;
+         if(fail == 0)
+         	$display("PASSED ALL TESTS");
+         else
+         	$display("Failed at test %d:", fail);
 
-#10 reset = 0; in = 3; push = 1; pop = 0; // #4 push when full , not really pushed
-
-#10 if (full != 1 || out != 3) fail <= 8;
-
-#10 reset = 0; in = 0; push = 0; pop = 1; // #1 pop
-
-#10 if (full != 1 || out != 3) fail <= 9;
-
-#10 reset = 0; in = 0; push = 0; pop = 1; // #2 pop
-
-#10 if (full != 0 || out != 2) fail <= 10;
-
-#10 reset = 1; in = 0; push = 0; pop = 0; //reset params
-
-#10 if (full != 0 || out != 0) fail <= 11;
-
-#10
-if(fail == 0)
-	$display("PASSED ALL TESTS");
-else
-	$display("Failed at test %d:", fail);
-
-$finish;
-end
-
+         $finish;
+      end
 endmodule

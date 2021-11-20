@@ -1,4 +1,4 @@
-module main;
+module sat_count_tb;
    reg clk, reset, branch, taken;
    wire prediction;
    reg test_result_0;
@@ -18,7 +18,6 @@ module main;
          test_result_0 = 1;
          test_result_1 = 1;
          test_result_2 = 1;
-         test_result_3 = 1;
          reset = 1;
          branch = 0;
          taken = 0;
@@ -26,44 +25,36 @@ module main;
          #10;
          reset = 0;
          test_result_0 = test_result_0 & (~prediction);
-         if (test_result_0)
-            $display("reset test passed!");
-
          #10;
          taken = 1;
-         #20;
-         test_result_1 = test_result_1 & (~prediction);
-         if (test_result_1)
-            $display("branch test passed!");
+         test_result_0 = test_result_0 & (~prediction);
+         if (test_result_0)
+            $display("preserved value test passed!");
 
          #10;
          branch = 1;
          taken = 1;
          #10;
-         test_result_2 = test_result_2 & (~prediction);
+         test_result_1 = test_result_1 & (~prediction);
          #10;
-         test_result_2 = test_result_2 & (prediction);
-         #10;
-         test_result_2 = test_result_2 & (prediction);
+         test_result_1 = test_result_1 & (prediction);
          #20;
-         test_result_2 = test_result_2 & (prediction);
-         if (test_result_2)
-            $display("first taken test passed!");
+         test_result_1 = test_result_1 & (prediction);
+         if (test_result_1)
+            $display("up counting test passed!");
          #10;
          branch = 1;
          taken = 0;
          #10;
-         test_result_3 = test_result_3 & (prediction);
+         test_result_2 = test_result_2 & (prediction);
          #10;
-         test_result_3 = test_result_3 & (~prediction);
-         #10;
-         test_result_3 = test_result_3 & (~prediction);
+         test_result_2 = test_result_2 & (~prediction);
          #20;
-         test_result_3 = test_result_3 & (~prediction);
-         if (test_result_3)
-            $display("second taken test passed!");
+         test_result_2 = test_result_2 & (~prediction);
+         if (test_result_2)
+            $display("down counting test passed!");
 
-         if (test_result_0 & test_result_1 & test_result_2 & test_result_3)
+         if (test_result_0 & test_result_1 & test_result_2)
             $display("PASSED ALL TESTS!");
          $finish;
       end

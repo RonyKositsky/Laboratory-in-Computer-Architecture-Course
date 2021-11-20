@@ -1,0 +1,55 @@
+ncverilog(64): 15.20-s085: (c) Copyright 1995-2020 Cadence Design Systems, Inc.
+TOOL:	ncverilog	15.20-s085: Started on Nov 20, 2021 at 16:32:26 IST
+ncverilog
+	+access+rw
+	fifo_tb.v
+	fifo.v
+file: fifo_tb.v
+	module worklib.main:v
+		errors: 0, warnings: 0
+file: fifo.v
+	module worklib.fifo:v
+		errors: 0, warnings: 0
+	Total errors/warnings found outside modules and primitives:
+		errors: 0, warnings: 0
+		Caching library 'worklib' ....... Done
+	Elaborating the design hierarchy:
+	Building instance overlay tables: .................... Done
+	Generating native compiled code:
+		worklib.fifo:v <0x350f1874>
+			streams:   9, words:  3989
+		worklib.main:v <0x416110c4>
+			streams:   7, words: 18970
+	Building instance specific data structures.
+	Loading native compiled code:     .................... Done
+	Design hierarchy summary:
+		              Instances  Unique
+		Modules:              2       2
+		Registers:           10      10
+		Scalar wires:         5       -
+		Vectored wires:       2       -
+		Always blocks:        2       2
+		Initial blocks:       3       3
+		Pseudo assignments:   5       5
+	Writing initial simulation snapshot: worklib.main:v
+Loading snapshot worklib.main:v .................... Done
+ncsim> source /tools/cadence/INCISIVE/15.20.085/tools/inca/files/ncsimrc
+ncsim> run
+full - 0, out - 0
+reset passed!
+push (n = 1) passed!
+pop (n = 0) passed!
+push && pop (n = 1) passed!
+push (n = 2) passed!
+push (n = 3) passed!
+push (n = 4) passed!
+push (n = 4) queue is full passed!
+pop (n = 3) passed!
+pop (n = 2) passed!
+push && pop (n = 2) passed!
+reset queue passed!
+PASSED ALL TESTS
+Simulation complete via $finish(1) at time 120 NS + 0
+./fifo_tb.v:107          $finish;
+ncsim> exit
+TOOL:	ncverilog	15.20-s085: Exiting on Nov 20, 2021 at 16:32:27 IST  (total: 00:00:01)

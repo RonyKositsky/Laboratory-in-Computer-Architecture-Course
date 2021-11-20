@@ -12,7 +12,7 @@ module fifo(clk, reset, in, push, pop, out, full);
    reg [M-1:0] out;
    reg full;
 
-	always @(posedge clk or reset)
+	always @(posedge clk or posedge reset)
 		begin
 			if (reset == 1) 
 				begin
@@ -23,46 +23,38 @@ module fifo(clk, reset, in, push, pop, out, full);
 				end
 			else 
 				begin
-					if (pop == 0 and push == 1)
+					if (pop == 0 && push == 1)
 						begin
 							if (n < N)	// 0 <= n < N
-								W_t <= (in << M * n) | W_t;
-							else
-								n <= n - 1; // decrease one for making n stay tha same
-
-							n <= n + 1;
-						end
-					else if (pop == 1 and push == 0)
-						begin
-							if (n == 0)
-								n <= n + 1; // increase one for making n stay tha same
-							else	// 0 < n <= N
 								begin
-									out <= W_t & ((1 << M) - 1)	// out = W[n]
-									W_t <= W_t >> M;
+									W_t <= (in << M * n) | W_t;
+									n <= n + 1;
 								end
-
-							n <= n - 1;
 						end
-					else if (pop == 1 and push == 1)
+					else if (pop == 1 && push == 0)
+						begin
+							if (n != 0)
+								begin
+									W_t <= (W_t >> M);
+									n <= n - 1;
+								end
+						end
+					else if (pop == 1 && push == 1)
 						begin
 							if (n == 0)
 								begin
-									W_t <= n;
+									W_t <= in;
 									n <= n + 1;
 								end
 							else
 								begin
-									out <= W_t & ((1 << M) - 1)	// out = W[n]		
-									W_t <= W_t >> M;
-									W_t <= (in << M * (n - 1)) | W_t;
+									W_t <= (W_t >> M);						// pop on item
+									W_t <= (in << M * (n - 1)) | W_t;	// push the new item to (n-1)
 								end
 						end
-
-					if (n < N)
-						full <= 0;
-					else
-						full <= 1;
+					
+					out <= n == 0 ? 0 : W_t & ((1 << M) - 1);	// out = W[n]
+					full <= n < N ? 0 : 1;
 				end
 		end
 endmodule
