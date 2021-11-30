@@ -61,17 +61,17 @@ module CTL(
   		verilog_trace_fp = $fopen("verilog_trace.txt", "w");
   	end
 
-  reg [15:0] sram_ADDR;
-  reg [31:0] sram_DI;
-  reg 	 sram_EN;
-  reg 	 sram_WE;
+  reg [15:0] 	sram_ADDR;
+  reg [31:0] 	sram_DI;
+  reg 	 			sram_EN;
+  reg 	 			sram_WE;
   
   reg [2:0]    DMA_STATE;
-  reg [1:0]     DMA_write;
-  reg [31:0]    DMA_src;
-  reg [31:0]    DMA_dst;
-  reg [31:0]    DMA_length;
-  reg [31:0]    DMA_data;
+  reg 		     DMA_write;
+  reg [31:0]   DMA_src;
+  reg [31:0]   DMA_dst;
+  reg [31:0]   DMA_length;
+  reg [31:0]   DMA_data;
    
   // synchronous instructions
   always@(posedge clk)
@@ -242,8 +242,23 @@ module CTL(
 									begin 
 										if (DMA_STATE == `DMA_STATE_IDLE) begin 
 											DMA_src <= alu0;
-											DMA_dst <= alu1;
-											DMA_length <= immediate;
+											DMA_length <= alu1;
+											if(dst == 0)
+												DMA_dst <= 0;
+											else if(dst == 1)
+												DMA_dst <= immediate;
+											else if(dst == 2)
+												DMA_dst <= r2;
+											else if(dst == 3)
+												DMA_dst <= r3;
+											else if(dst == 4)
+												DMA_dst <= r4;
+											else if(dst == 5)
+												DMA_dst <= r5;
+											else if(dst == 6)
+												DMA_dst <= r6;
+											else if(dst == 7)
+												DMA_dst <= r7;
 											DMA_STATE <= `DMA_STATE_FETCH0;
 										end
 									end
@@ -282,25 +297,18 @@ module CTL(
 				
 				case (DMA_STATE) 
 				   `DMA_STATE_FETCH0: 
-						DMA_STATE <= `DMA_STATE_FETCH1;
+							DMA_STATE <= `DMA_STATE_FETCH1;
 				   `DMA_STATE_FETCH1:
-						begin
 							DMA_STATE <= `DMA_STATE_DEC0;
-						end
 				   `DMA_STATE_DEC0: 
-						begin
-							DMA_STATE <= `DMA_STATE_DEC1;
-						end
-				   `DMA_STATE_DEC1: 	
-						begin
-							if (DMA_write == 0)
+				    	begin
 								DMA_data <= sram_DO;
+								DMA_STATE <= `DMA_STATE_DEC1;
+							end
+				   `DMA_STATE_DEC1: 	
 							DMA_STATE <= `DMA_STATE_EXEC0;
-						end
 					`DMA_STATE_EXEC0: 
-						begin
 							DMA_STATE <= `DMA_STATE_EXEC1;
-						end
 					`DMA_STATE_EXEC1: 
 						begin
 							if (DMA_length != 0)
@@ -363,7 +371,7 @@ module CTL(
 			if (DMA_write == 0) 
 				begin
 					case (DMA_STATE)
-					`DMA_STATE_DEC0: 
+					`DMA_STATE_FETCH1: 
 						begin
 							sram_ADDR = DMA_src[15:0];
 							sram_DI = 0;
