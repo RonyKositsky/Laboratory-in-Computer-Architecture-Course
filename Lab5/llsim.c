@@ -355,10 +355,6 @@ int main(int argc, char **argv)
 		printf(">>>>> clock %d <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", llsim->clock);
 		llsim_run_clock();
 		llsim->clock++;
-		/*
-		if ((llsim->clock % 1000000) == 0)
-			printf("clock %d\n", llsim->clock);
-		*/
 	}
 	return 0;
 }
