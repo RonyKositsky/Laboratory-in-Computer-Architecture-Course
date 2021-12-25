@@ -284,7 +284,7 @@ static void sp_ctl(sp_t *sp)
 	fprintf(cycle_trace_fp, "exec1_alu1 %08x\n", spro->exec1_alu1); // 32 bits
 	fprintf(cycle_trace_fp, "exec1_aluout %08x\n", spro->exec1_aluout);
 
-	fprintf(cycle_trace_fp, "\n");
+	fprintf(cycle_trace_fp, "\n\n\n");
 
 	sp_printf("cycle_counter %08x\n", spro->cycle_counter);
 	sp_printf("r2 %08x, r3 %08x\n", spro->r[2], spro->r[3]);
@@ -527,22 +527,22 @@ static void sp_run(llsim_unit_t *unit)
 
 static void sp_generate_sram_memory_image(sp_t *sp, char *program_name)
 {
-        FILE *fp;
-        int addr, i;
+    FILE *fp;
+    int addr, i;
 
-        fp = fopen(program_name, "r");
-        if (fp == NULL) {
-                printf("couldn't open file %s\n", program_name);
-                exit(1);
-        }
-        addr = 0;
-        while (addr < SP_SRAM_HEIGHT) 
-        {
-                fscanf(fp, "%08x\n", &sp->memory_image[addr]);
-                addr++;
-                if (feof(fp))
-                        break;
-        }
+    fp = fopen(program_name, "r");
+    if (fp == NULL) {
+            printf("couldn't open file %s\n", program_name);
+            exit(1);
+    }
+    addr = 0;
+    while (addr < SP_SRAM_HEIGHT) 
+    {
+            fscanf(fp, "%08x\n", &sp->memory_image[addr]);
+            addr++;
+            if (feof(fp))
+                    break;
+    }
 	sp->memory_image_size = addr;
 
     fprintf(inst_trace_fp, "program %s loaded, %d lines\n", program_name, addr);
@@ -773,7 +773,7 @@ void handle_exec_0_DMA(sp_registers_t* sprn, sp_registers_t* spro)
 
     if (spro->exec0_opcode == CPY && pol_status == 0)
     {
-        //handle Read After Write Hazard for src0
+        // handle Read After Write Hazard for src0
         if (spro->exec1_active && spro->exec1_dst == spro->exec0_src0 && next_is_content_changing_opcode)
         {
             sprn->DMA_curr_src_addr = spro->exec1_aluout;
@@ -782,17 +782,18 @@ void handle_exec_0_DMA(sp_registers_t* sprn, sp_registers_t* spro)
         {
             sprn->DMA_curr_src_addr = spro->r[spro->exec0_src0];
         }
-        if (spro->exec1_dst == spro->exec0_src1 && spro->exec1_active && next_is_content_changing_opcode)
+        
+        // handle Read After Write Hazard for src1        
+        if (spro->exec1_active && spro->exec1_dst == spro->exec0_src1 && next_is_content_changing_opcode)
         {  
-            //handle Read After Write Hazard for src1
-            sprn->DMA_curr_dest_addr = spro->exec1_aluout;
+            sprn->DMA_num_of_operations_left = spro->exec1_aluout;
         }
         else
         {
-            sprn->DMA_curr_dest_addr = spro->r[spro->exec0_src1];
+            sprn->DMA_num_of_operations_left = spro->r[spro->exec0_src1];
         }
 
-        sprn->DMA_num_of_operations_left = spro->exec0_immediate;
+        sprn->DMA_curr_dest_addr = spro->r[spro->exec0_dst];
     }
 }
 
@@ -827,7 +828,7 @@ void exec_1_handle_flush(sp_registers_t* sprn, int next_pc){
 }
 
 
-static void handle_DMA(sp_t *sp, int memory_busy){
+void handle_DMA(sp_t *sp, int memory_busy){
 
     sp_registers_t *spro = sp->spro;
     sp_registers_t *sprn = sp->sprn;
